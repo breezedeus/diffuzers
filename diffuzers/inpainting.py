@@ -75,6 +75,10 @@ class Inpainting:
 
         self._set_scheduler(scheduler)
         logger.info(self.pipeline.scheduler)
+        logger.info(f'{type(image)}, {image.size}')
+        logger.info(f'{type(mask)}, {mask.size}')
+        image.save('inpaint.jpg')
+        mask.save('inpaint-mask.jpg')
 
         if self.device == "mps":
             generator = torch.manual_seed(seed)
@@ -205,8 +209,8 @@ class Inpainting:
                 background_image=pil_image,
                 update_streamlit=True,
                 drawing_mode=drawing_mode,
-                height=768,
-                width=768,
+                height=512,
+                width=512,
                 key="inpainting_canvas",
             )
 

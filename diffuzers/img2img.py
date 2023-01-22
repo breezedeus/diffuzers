@@ -21,6 +21,14 @@ from PIL.PngImagePlugin import PngInfo
 from diffuzers import utils
 
 
+
+def display_and_download_images(output_images, metadata, download_col=None):
+    # st.image(output_images, width=128, output_format="PNG")
+    cols = st.columns(3) 
+    for idx, image in enumerate(output_images):
+        cols[idx % 3].image(image)
+
+
 @dataclass
 class Img2Img:
     model: Optional[str] = None
@@ -73,7 +81,7 @@ class Img2Img:
         self.pipeline.scheduler = scheduler
 
     def generate_image(
-        self, prompt, image, strength, negative_prompt, scheduler, num_images, guidance_scale, steps, seed
+        self, prompt, image, strength, negative_prompt, scheduler, image_size, num_images, guidance_scale, steps, seed
     ):
         self._set_scheduler(scheduler)
         logger.info(self.pipeline.scheduler)
@@ -92,6 +100,8 @@ class Img2Img:
             guidance_scale=guidance_scale,
             num_images_per_prompt=num_images,
             generator=generator,
+            width=image_size[1],
+            height=image_size[0],
         ).images
         torch.cuda.empty_cache()
         gc.collect()
@@ -137,6 +147,8 @@ class Img2Img:
             negative_prompt = st.text_area("Negative Prompt", "")
 
         scheduler = st.sidebar.selectbox("Scheduler", available_schedulers, index=0)
+        image_height = st.sidebar.slider("Image height", 128, 1024, 512, 128)
+        image_width = st.sidebar.slider("Image width", 128, 1024, 512, 128)
         guidance_scale = st.sidebar.slider("Guidance scale", 1.0, 40.0, 7.5, 0.5)
         strength = st.sidebar.slider("Strength", 0.0, 1.0, 0.8, 0.05)
         num_images = st.sidebar.slider("Number of images per prompt", 1, 30, 1, 1)
@@ -159,6 +171,7 @@ class Img2Img:
                     image=input_image,
                     negative_prompt=negative_prompt,
                     scheduler=scheduler,
+                    image_size=(image_height, image_width),
                     num_images=num_images,
                     guidance_scale=guidance_scale,
                     steps=steps,
@@ -166,4 +179,4 @@ class Img2Img:
                     strength=strength,
                 )
 
-            utils.display_and_download_images(output_images, metadata, download_col)
+            display_and_download_images(output_images, metadata, download_col)

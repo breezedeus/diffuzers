@@ -16,6 +16,8 @@ def app():
         submit = st.form_submit_button("Load model")
     if submit:
         st.session_state.inpainting_model = model
+        st.session_state.device = 'cuda'
+        st.session_state.output_path = 'output-gen'
         with st.spinner("Loading model..."):
             inpainting = Inpainting(
                 model=model,
