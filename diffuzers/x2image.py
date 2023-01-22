@@ -313,7 +313,7 @@ class X2Image:
             "Number of images per prompt",
             1,
             30,
-            1,
+            3,
             1,
             help="Number of images you want to generate. More images requires more time and uses more GPU memory.",
         )
@@ -350,7 +350,7 @@ class X2Image:
         )
         seed = st.sidebar.number_input(
             "Seed",
-            value=42,
+            value=-1,
             min_value=-1,
             max_value=999999,
             step=1,
