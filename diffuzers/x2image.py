@@ -26,6 +26,13 @@ from st_clickable_images import clickable_images
 from diffuzers import utils
 
 
+def display_and_download_images(output_images, metadata, download_col=None):
+    # st.image(output_images, width=128, output_format="PNG")
+    cols = st.columns(3)
+    for idx, image in enumerate(output_images):
+        cols[idx % 3].image(image)
+
+
 def load_embed(learned_embeds_path, text_encoder, tokenizer, token=None):
     loaded_learned_embeds = torch.load(learned_embeds_path, map_location="cpu")
     if len(loaded_learned_embeds) > 2:
@@ -204,8 +211,12 @@ class X2Image:
         return output_images, _metadata
 
     def img2img_generate(
-        self, prompt, image, strength, negative_prompt, scheduler, num_images, guidance_scale, steps, seed
+        self, prompt, image, strength, negative_prompt, scheduler, image_size, num_images, guidance_scale, steps, seed
     ):
+        ori_w, ori_h = image.size
+        if abs(ori_w / ori_h - image_size[1] / image_size[0]) > 1e-3:
+            logger.warning(f'resize init image with shape {(ori_h, ori_w)} to shape {image_size}')
+        image = image.resize(tuple(reversed(image_size)))
 
         if seed == -1:
             # generate random seed
@@ -220,6 +231,8 @@ class X2Image:
         output_images = self.img2img_pipeline(
             prompt=prompt,
             image=image,
+            width=image_size[1],
+            height=image_size[0],
             strength=strength,
             negative_prompt=negative_prompt,
             num_inference_steps=steps,
@@ -291,13 +304,12 @@ class X2Image:
                 help="The prompt not to guide image generation. Write things that you dont want to see in the image.",
             )
         # sidebar options
-        if input_image is None:
-            image_height = st.sidebar.slider(
-                "Image height", 128, 1024, 512, 128, help="The height in pixels of the generated image."
-            )
-            image_width = st.sidebar.slider(
-                "Image width", 128, 1024, 512, 128, help="The width in pixels of the generated image."
-            )
+        image_height = st.sidebar.slider(
+            "Image height", 128, 1024, 512, 128, help="The height in pixels of the generated image."
+        )
+        image_width = st.sidebar.slider(
+            "Image width", 128, 1024, 512, 128, help="The width in pixels of the generated image."
+        )
 
         num_images = st.sidebar.slider(
             "Number of images per prompt",
@@ -326,7 +338,7 @@ class X2Image:
                 "Denoising strength",
                 0.0,
                 1.0,
-                0.8,
+                0.6,
                 0.05,
                 help="Conceptually, indicates how much to transform the reference `image`. Must be between 0 and 1. `image` will be used as a starting point, adding more noise to it the larger the `strength`. The number of denoising steps depends on the amount of noise initially added. When `strength` is 1, added noise will be maximum and the denoising process will run for the full number of iterations specified in `num_inference_steps`. A value of 1, therefore, essentially ignores `image`.",
             )
@@ -371,9 +383,10 @@ class X2Image:
                         strength=strength,
                         negative_prompt=negative_prompt,
                         scheduler=scheduler,
+                        image_size=(image_height, image_width),
                         num_images=num_images,
                         guidance_scale=guidance_scale,
                         steps=steps,
                         seed=seed,
                     )
-            utils.display_and_download_images(output_images, metadata, download_col)
+            display_and_download_images(output_images, metadata, download_col)

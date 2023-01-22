@@ -21,7 +21,6 @@ from PIL.PngImagePlugin import PngInfo
 from diffuzers import utils
 
 
-
 def display_and_download_images(output_images, metadata, download_col=None):
     # st.image(output_images, width=128, output_format="PNG")
     cols = st.columns(3) 
