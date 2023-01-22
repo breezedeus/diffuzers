@@ -231,8 +231,6 @@ class X2Image:
         output_images = self.img2img_pipeline(
             prompt=prompt,
             image=image,
-            width=image_size[1],
-            height=image_size[0],
             strength=strength,
             negative_prompt=negative_prompt,
             num_inference_steps=steps,
